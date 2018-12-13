@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using app.Data;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using app.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,9 +11,18 @@ namespace app
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IHostingEnvironment hostingEnvironment)
         {
-            Configuration = configuration;
+            // Below code demonstrates usage of multiple configuration sources. For instance a setting say 'setting1'
+            // is found in both the registered sources, then the later source will win. By this way a Local config
+            // can be overridden by a different setting while deployed remotely.
+            IConfigurationBuilder builder = new ConfigurationBuilder()
+                .SetBasePath(hostingEnvironment.ContentRootPath)
+                .AddJsonFile("config.json")
+                //All environment variables in the process's context flow in as configuration values.
+                .AddEnvironmentVariables();
+
+            Configuration = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -34,9 +37,8 @@ namespace app
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(
-            Configuration.GetConnectionString("DefaultConnection")));
+            services.AddApplicationDbContext(Configuration);
+
             services.AddDefaultIdentity<IdentityUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -66,8 +68,8 @@ namespace app
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    "default",
+                    "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }
