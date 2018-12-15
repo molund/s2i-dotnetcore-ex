@@ -5,14 +5,16 @@ VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "app", "app\app.csproj", "{9C011224-85D0-4A6D-934A-E0F6B10F967A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webservices", "webservices\webservices.csproj", "{B4C026E6-60B7-4FA6-B7F1-D48D908612EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "webservices", "webservices\webservices.csproj", "{B4C026E6-60B7-4FA6-B7F1-D48D908612EA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FF289934-6146-4C6D-AC51-EFFA2BA674A4}"
 	ProjectSection(SolutionItems) = preProject
+		openshift\templates\scj-booking-build.json = openshift\templates\scj-booking-build.json
+		openshift\templates\scj-booking-deploy.json = openshift\templates\scj-booking-deploy.json
 		Solution Items\SCJ_SC_OnlineBooking.wsdl = Solution Items\SCJ_SC_OnlineBooking.wsdl
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{658A7C9D-0D4B-44D7-8011-DFC1B039EAA5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test", "test\test.csproj", "{658A7C9D-0D4B-44D7-8011-DFC1B039EAA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

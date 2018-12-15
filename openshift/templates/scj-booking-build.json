@@ -23,7 +23,17 @@
             "metadata": {
                 "name": "${NAME}",
                 "annotations": {
-                    "description": "Keeps track of changes in the application image"
+                    "description": "Keeps track of changes in the application runtime image"
+                }
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}-build",
+                "annotations": {
+                    "description": "Keeps track of changes in the application builder image"
                 }
             }
         },
@@ -31,7 +41,7 @@
             "kind": "BuildConfig",
             "apiVersion": "v1",
             "metadata": {
-                "name": "${NAME}",
+                "name": "${NAME}-build",
                 "annotations": {
                     "description": "Defines how to build the application"
                 }
@@ -51,7 +61,7 @@
                         "from": {
                             "kind": "ImageStreamTag",
                             "namespace": "${NAMESPACE}",
-                            "name": "${DOTNET_IMAGE_STREAM_TAG}"
+                            "name": "${DOTNET_BUILD_IMAGE_STREAM_TAG}"
                         },
                         "env": [
                             {
@@ -83,6 +93,10 @@
                                 "value": "${DOTNET_RESTORE_SOURCES}"
                             },
                             {
+                                "name": "DOTNET_PACK",
+                                "value": "true"
+                            },
+                            {
                                 "name": "DOTNET_TOOLS",
                                 "value": "${DOTNET_TOOLS}"
                             }
@@ -92,7 +106,7 @@
                 "output": {
                     "to": {
                         "kind": "ImageStreamTag",
-                        "name": "${NAME}:latest"
+                        "name": "${NAME}-build:latest"
                     }
                 },
                 "triggers": [
@@ -112,6 +126,68 @@
                 "postCommit": {}
             }
         },
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}-runtime",
+                "annotations": {
+                    "description": "Defines how to chain the runtime image from the source build image"
+                }
+            },
+            "spec": {
+                "source": {
+                    "dockerfile": "FROM ${DOTNET_RUNTIME_IMAGE_STREAM_TAG}\nADD app.tar.gz .",
+                    "images": [
+                        {
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${NAME}-build:latest"
+                            },
+                            "paths": [
+                                {
+                                    "sourcePath": "/opt/app-root/app.tar.gz",
+                                    "destinationDir": "."
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "strategy": {
+                    "type": "Docker",
+                    "dockerStrategy": {
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "namespace": "${NAMESPACE}",
+                            "name": "${DOTNET_RUNTIME_IMAGE_STREAM_TAG}"
+                        }
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "${NAME}:latest"
+                    }
+                },
+                "triggers": [
+                    {
+                        "type": "ImageChange"
+                    },
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChange": {
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${NAME}-build:latest"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
     ],
     "parameters": [
         {
@@ -122,10 +198,17 @@
             "value": "scj-booking"
         },
         {
-            "name": "DOTNET_IMAGE_STREAM_TAG",
+            "name": "DOTNET_RUNTIME_IMAGE_STREAM_TAG",
+            "displayName": ".NET Runtime Imagestream Tag",
+            "description": "The image stream tag which is used to run the application.",
+            "required": true,
+            "value": "dotnet-runtime:2.1"
+        },
+        {
+            "name": "DOTNET_BUILD_IMAGE_STREAM_TAG",
             "displayName": ".NET builder",
             "required": true,
-            "description": "The image stream tag which is used to build the code.",
+            "description": "The image stream tag which is used to build the application.",
             "value": "dotnet:2.1"
         },
         {
